@@ -681,6 +681,125 @@
       .dim-grid,
       .score-grid { grid-template-columns: 1fr; }
     }
+
+    /* ---- Live Status Bar ---- */
+    .live-status-bar {
+      position: sticky;
+      top: 8px;
+      z-index: 100;
+      margin-top: 20px;
+      padding: 14px 16px;
+    }
+    .status-bar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .status-best-match {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-strong);
+      white-space: nowrap;
+      min-width: 150px;
+    }
+    .status-dims {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      flex: 1;
+    }
+    .dim-chip {
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-weight: 700;
+      transition: background .2s, border-color .2s, color .2s;
+    }
+    .dim-chip.level-H { background: #d4edda; border-color: #8cbf93; color: #2d6a3a; }
+    .dim-chip.level-M { background: var(--soft); border-color: var(--line); color: var(--muted); }
+    .dim-chip.level-L { background: #f8d7da; border-color: #c8858a; color: #7a2528; }
+    .status-toggle-btn {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-strong);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .status-dropdown {
+      margin-top: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      display: none;
+    }
+    .drunk-markers {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .drunk-marker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .drunk-marker.active { background: #d4edda; border-color: #8cbf93; color: #2d6a3a; }
+    .drunk-marker.inactive { background: var(--soft); border-color: var(--line); color: var(--muted); }
+    .drunk-marker.dimmed { opacity: 0.45; }
+    .status-dropdown-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 8px;
+    }
+    .type-row {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .type-row .type-code {
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--accent-strong);
+    }
+    .type-row .type-cn {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .type-row .type-stats {
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .type-row .type-stats strong {
+      display: block;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .type-row.top-match {
+      border-color: var(--accent);
+      background: var(--soft);
+    }
+    @media (max-width: 600px) {
+      .status-best-match { min-width: unset; width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -705,6 +824,18 @@
     </section>
 
     <section id="test" class="screen">
+      <div id="liveStatusBar" class="live-status-bar card">
+        <div class="status-bar-header">
+          <div class="status-best-match" id="statusBestMatch">主人格：--</div>
+          <div class="status-dims" id="statusDims"></div>
+          <button class="status-toggle-btn" id="statusToggleBtn">展开详情 ▼</button>
+        </div>
+        <div class="status-dropdown" id="statusDropdown">
+          <div class="drunk-markers" id="drunkMarkers"></div>
+          <div class="status-dropdown-grid" id="statusDropdownGrid"></div>
+        </div>
+      </div>
+
       <div class="test-wrap card">
         <div class="topbar">
           <div class="progress"><span id="progressBar"></span></div>
@@ -1582,10 +1713,12 @@
           }
 
           updateProgress();
+          updateLiveStatus();
         });
       });
 
       updateProgress();
+      updateLiveStatus();
     }
 
     function updateProgress() {
@@ -1753,6 +1886,112 @@
       renderQuestions();
       showScreen('test');
     }
+
+    // ---- Live Status Bar ----
+    function computeLiveScores() {
+      const rawScores = {};
+      Object.keys(dimensionMeta).forEach(dim => {
+        const count = questions.filter(q => q.dim === dim).length;
+        rawScores[dim] = count * 2;
+      });
+      questions.forEach(q => {
+        if (app.answers[q.id] !== undefined) {
+          rawScores[q.dim] += Number(app.answers[q.id]) - 2;
+        }
+      });
+
+      const levels = {};
+      Object.entries(rawScores).forEach(([dim, score]) => {
+        levels[dim] = sumToLevel(score);
+      });
+
+      const userVector = dimensionOrder.map(dim => levelNum(levels[dim]));
+      const ranked = NORMAL_TYPES.map(type => {
+        const vector = parsePattern(type.pattern).map(levelNum);
+        let distance = 0, exact = 0;
+        for (let i = 0; i < vector.length; i++) {
+          const diff = Math.abs(userVector[i] - vector[i]);
+          distance += diff;
+          if (diff === 0) exact++;
+        }
+        const similarity = Math.max(0, Math.round((1 - distance / 30) * 100));
+        return { ...type, distance, exact, similarity };
+      }).sort((a, b) => {
+        if (a.distance !== b.distance) return a.distance - b.distance;
+        if (b.exact !== a.exact) return b.exact - a.exact;
+        return b.similarity - a.similarity;
+      });
+
+      const drunkQ1 = app.answers['drink_gate_q1'] === 3;
+      const drunkQ2 = app.answers['drink_gate_q2'] === 2;
+      const drunkTriggered = drunkQ1 && drunkQ2;
+      const hhhhTriggered = !drunkTriggered && ranked[0].similarity < 60;
+
+      let bestType;
+      if (drunkTriggered) {
+        bestType = { code: 'DRUNK', cn: '酒鬼', similarity: 100, special: true };
+      } else if (hhhhTriggered) {
+        bestType = { code: 'HHHH', cn: '傻乐者', similarity: 100, special: true };
+      } else {
+        bestType = ranked[0];
+      }
+
+      return { levels, ranked, bestType, drunkQ1, drunkQ2 };
+    }
+
+    function renderDropdownContent() {
+      const { ranked, bestType, drunkQ1, drunkQ2 } = computeLiveScores();
+
+      const markersEl = document.getElementById('drunkMarkers');
+      markersEl.innerHTML = `
+        <span class="drunk-marker ${drunkQ1 ? 'active' : 'inactive'}">
+          ${drunkQ1 ? '✓' : '✗'} 爱好：饮酒
+        </span>
+        <span class="drunk-marker ${drunkQ2 ? 'active' : 'inactive'} ${!drunkQ1 ? 'dimmed' : ''}">
+          ${drunkQ2 ? '✓' : '✗'} 酒精令我信服
+        </span>
+      `;
+
+      const grid = document.getElementById('statusDropdownGrid');
+      grid.innerHTML = ranked.map((t, i) => `
+        <div class="type-row${i === 0 ? ' top-match' : ''}">
+          <div>
+            <div class="type-code">${t.code}</div>
+            <div class="type-cn">${TYPE_LIBRARY[t.code]?.cn || ''}</div>
+          </div>
+          <div class="type-stats">
+            <strong>${t.similarity}%</strong>
+            <span>${t.exact}/15 维</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateLiveStatus() {
+      const { levels, bestType } = computeLiveScores();
+
+      document.getElementById('statusBestMatch').textContent =
+        `主人格：${bestType.code} ${bestType.similarity}%`;
+
+      document.getElementById('statusDims').innerHTML = dimensionOrder.map(dim => {
+        const lvl = levels[dim];
+        return `<span class="dim-chip level-${lvl}" title="${dimensionMeta[dim].name}">${dim}:${lvl}</span>`;
+      }).join('');
+
+      const dropdown = document.getElementById('statusDropdown');
+      if (dropdown.style.display !== 'none') {
+        renderDropdownContent();
+      }
+    }
+
+    document.getElementById('statusToggleBtn').addEventListener('click', () => {
+      const dropdown = document.getElementById('statusDropdown');
+      const btn = document.getElementById('statusToggleBtn');
+      const open = dropdown.style.display !== 'none';
+      dropdown.style.display = open ? 'none' : 'block';
+      btn.textContent = open ? '展开详情 ▼' : '收起详情 ▲';
+      if (!open) renderDropdownContent();
+    });
 
     document.getElementById('startBtn').addEventListener('click', () => startTest(false));
     document.getElementById('backIntroBtn').addEventListener('click', () => showScreen('intro'));
