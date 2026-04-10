@@ -717,7 +717,7 @@
       font-weight: 700;
       transition: background .2s, border-color .2s, color .2s;
     }
-    .dim-chip.level-H { background: #d4edda; border-color: #8cbf93; color: #2d6a3a; }
+    .dim-chip.level-H { background: #dbeafe; border-color: #7eadd4; color: #1e4880; }
     .dim-chip.level-M { background: var(--soft); border-color: var(--line); color: var(--muted); }
     .dim-chip.level-L { background: #f8d7da; border-color: #c8858a; color: #7a2528; }
     .status-toggle-btn {
@@ -754,6 +754,21 @@
       border: 1px solid var(--line);
       transition: background .2s, color .2s, border-color .2s;
     }
+    .option-delta {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .delta-pos     { background: #d4edda; color: #2d6a3a; border: 1px solid #8cbf93; }
+    .delta-neu     { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+    .delta-neg     { background: #f8d7da; color: #7a2528; border: 1px solid #c8858a; }
+    .delta-special { background: #d4edda; color: #2d6a3a; border: 1px solid #8cbf93; }
+
     .drunk-marker.active { background: #d4edda; border-color: #8cbf93; color: #2d6a3a; }
     .drunk-marker.inactive { background: var(--soft); border-color: var(--line); color: var(--muted); }
     .drunk-marker.dimmed { opacity: 0.45; }
@@ -1675,22 +1690,21 @@
               var mid = ``;
               if (q.id == 'drink_gate_q1'){
                 if (opt.value == 3){
-                  mid = `${opt.label} （*）`
+                  mid = `${opt.label}<span class="option-delta delta-special">*</span>`
                 } else {
                   mid = `${opt.label}`
                 }
               } else if (q.id == 'drink_gate_q2') {
                 if (opt.value == 2){
-                    mid = `${opt.label} （*）`
+                  mid = `${opt.label}<span class="option-delta delta-special">*</span>`
                 } else {
-                    mid = `${opt.label}`
+                  mid = `${opt.label}`
                 }
               } else {
-                if (opt.value - 2 >= 0) {
-                  mid = `${opt.label} (${q.dim} +${opt.value - 2})`
-                } else {
-                  mid = `${opt.label} (${q.dim} ${opt.value - 2})`
-                }
+                const delta = opt.value - 2;
+                const cls = delta > 0 ? 'delta-pos' : delta < 0 ? 'delta-neg' : 'delta-neu';
+                const sign = delta > 0 ? `+${delta}` : `${delta}`;
+                mid = `${opt.label}<span class="option-delta ${cls}">${sign}</span>`
               }
               return [prefix, mid, suffix].join('');
             }).join('')}
@@ -1936,7 +1950,7 @@
         bestType = ranked[0];
       }
 
-      return { levels, ranked, bestType, drunkQ1, drunkQ2 };
+      return { levels, rawScores, ranked, bestType, drunkQ1, drunkQ2 };
     }
 
     function renderDropdownContent() {
@@ -1952,30 +1966,38 @@
         </span>
       `;
 
+      const minDistance = ranked[0].distance;
+      const maxExact = ranked
+        .filter(t => t.distance === minDistance)
+        .reduce((m, t) => Math.max(m, t.exact), 0);
+
       const grid = document.getElementById('statusDropdownGrid');
-      grid.innerHTML = ranked.map((t, i) => `
-        <div class="type-row${i === 0 ? ' top-match' : ''}">
-          <div>
-            <div class="type-code">${t.code}</div>
-            <div class="type-cn">${TYPE_LIBRARY[t.code]?.cn || ''}</div>
+      grid.innerHTML = ranked.map(t => {
+        const isTop = t.distance === minDistance && t.exact === maxExact;
+        return `
+          <div class="type-row${isTop ? ' top-match' : ''}">
+            <div>
+              <div class="type-code">${t.code}</div>
+              <div class="type-cn">${TYPE_LIBRARY[t.code]?.cn || ''}</div>
+            </div>
+            <div class="type-stats">
+              <strong>${t.similarity}%</strong>
+              <span>${t.exact}/15 维</span>
+            </div>
           </div>
-          <div class="type-stats">
-            <strong>${t.similarity}%</strong>
-            <span>${t.exact}/15 维</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function updateLiveStatus() {
-      const { levels, bestType } = computeLiveScores();
+      const { levels, rawScores, bestType } = computeLiveScores();
 
       document.getElementById('statusBestMatch').textContent =
         `主人格：${bestType.code} ${bestType.similarity}%`;
 
       document.getElementById('statusDims').innerHTML = dimensionOrder.map(dim => {
         const lvl = levels[dim];
-        return `<span class="dim-chip level-${lvl}" title="${dimensionMeta[dim].name}">${dim}:${lvl}</span>`;
+        return `<span class="dim-chip level-${lvl}" title="${dimensionMeta[dim].name}">${dim}:${lvl}·${rawScores[dim]}</span>`;
       }).join('');
 
       const dropdown = document.getElementById('statusDropdown');
