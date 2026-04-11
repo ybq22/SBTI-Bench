@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # SBTI批量评测脚本
-# 用法1: ./batch_scripts/batch_eval.sh                    # 使用配置文件或默认模型列表
-# 用法2: ./batch_scripts/batch_eval.sh model1 model2 ...   # 使用自定义模型列表
+# 用法1: ./batch_scripts/batch_eval.sh                    # 使用配置文件或默认模型列表（跳过已评测）
+# 用法2: ./batch_scripts/batch_eval.sh --force            # 强制重新评测所有模型
+# 用法3: ./batch_scripts/batch_eval.sh model1 model2 ...   # 使用自定义模型列表
 
 set -e  # 遇到错误立即退出
 
@@ -19,6 +20,10 @@ DEFAULT_MODELS=(
     "meta-llama/llama-3-70b"
     "mistralai/mistral-large"
 )
+
+# 命令行参数
+FORCE_REEVAL=false  # 是否强制重新评测
+SKIP_EXISTING=true  # 是否跳过已评测的模型（默认）
 
 # 从配置文件加载模型列表
 load_models_from_config() {
@@ -39,6 +44,62 @@ load_models_from_config() {
     fi
 
     echo "${models[@]}"
+}
+
+# 检查模型是否已经被评测过
+is_model_evaluated() {
+    local model_id="$1"
+    local results_file="data/results.json"
+
+    if [ ! -f "$results_file" ]; then
+        return 1  # 文件不存在，未评测
+    fi
+
+    # 使用Python检查JSON中是否存在该model_id
+    python3 -c "
+import json
+import sys
+try:
+    with open('$results_file', 'r') as f:
+        data = json.load(f)
+
+    for eval_data in data['evaluations']:
+        if eval_data['model_id'] == '$model_id':
+            print('FOUND')
+            sys.exit(0)
+
+    print('NOT_FOUND')
+    sys.exit(1)
+except Exception as e:
+    print('ERROR')
+    sys.exit(2)
+" 2>/dev/null | grep -q 'FOUND'
+}
+
+# 显示已评测的模型列表
+show_evaluated_models() {
+    local results_file="data/results.json"
+
+    if [ ! -f "$results_file" ]; then
+        echo "  尚未有任何评测结果"
+        return
+    fi
+
+    local count=$(python3 -c "
+import json
+with open('$results_file', 'r') as f:
+    data = json.load(f)
+print(len(data['evaluations']))
+" 2>/dev/null || echo "0")
+
+    echo "  已评测 $count 个模型:"
+    python3 -c "
+import json
+with open('$results_file', 'r') as f:
+    data = json.load(f)
+for eval_data in data['evaluations']:
+    print(f\"    • {eval_data['model_name']} ({eval_data['model_id']})\")
+" 2>/dev/null || echo "  无法读取评测结果"
 }
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -76,45 +137,74 @@ fi
 PYTHON_CMD="conda run -n sbti python"
 
 # 确定要评测的模型列表
-if [ $# -eq 0 ]; then
+# 解析命令行参数
+ARGS=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --force)
+            FORCE_REEVAL=true
+            shift
+            ;;
+        --no-skip)
+            SKIP_EXISTING=false
+            shift
+            ;;
+        *)
+            ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [ ${#ARGS[@]} -eq 0 ]; then
     # 没有提供参数，尝试从配置文件加载
     CONFIG_MODELS=($(load_models_from_config "$CONFIG_FILE"))
 
     if [ ${#CONFIG_MODELS[@]} -gt 0 ]; then
         # 配置文件存在且有模型
-        echo "使用配置文件模型列表（共 ${#CONFIG_MODELS[@]} 个模型）"
-        echo "配置文件: $CONFIG_FILE"
-        echo ""
-        echo "模型列表:"
-        for i in "${!CONFIG_MODELS[@]}"; do
-            echo "  $((i+1)). ${CONFIG_MODELS[$i]}"
-        done
-        echo ""
         MODELS=("${CONFIG_MODELS[@]}")
     else
         # 配置文件不存在或为空，使用默认列表
-        echo "使用默认模型列表（共 ${#DEFAULT_MODELS[@]} 个模型）"
-        if [ ! -f "$CONFIG_FILE" ]; then
-            echo "提示: 创建 $CONFIG_FILE 可以自定义默认模型列表"
-        else
-            echo "提示: 配置文件为空，使用内置默认列表"
-        fi
-        echo ""
-        echo "默认模型列表:"
-        for i in "${!DEFAULT_MODELS[@]}"; do
-            echo "  $((i+1)). ${DEFAULT_MODELS[$i]}"
-        done
-        echo ""
         MODELS=("${DEFAULT_MODELS[@]}")
     fi
-
-    echo "你也可以提供自定义模型列表: $0 model1 model2 ..."
-    echo ""
 else
     # 提供了参数，使用命令行参数
-    echo "使用自定义模型列表（共 $# 个模型）"
-    MODELS=("$@")
+    MODELS=("${ARGS[@]}")
 fi
+
+# 显示评测模式
+echo "================================"
+echo "批量评测配置"
+echo "================================"
+if [ "$FORCE_REEVAL" = true ]; then
+    echo "模式: 强制重新评测所有模型 (--force)"
+else
+    echo "模式: 跳过已评测的模型 (默认)"
+    echo "      使用 --force 强制重新评测"
+fi
+
+if [ ${#MODELS[@]} -eq 0 ]; then
+    echo ""
+    echo "错误: 没有要评测的模型"
+    exit 1
+fi
+
+echo ""
+echo "待评测模型列表（共 ${#MODELS[@]} 个）:"
+for i in "${!MODELS[@]}"; do
+    MODEL="${MODELS[$i]}"
+    if is_model_evaluated "$MODEL"; then
+        echo "  $((i+1)). $MODEL [已评测，将跳过]"
+    else
+        echo "  $((i+1)). $MODEL"
+    fi
+done
+
+echo ""
+show_evaluated_models
+echo ""
+echo "================================"
+echo ""
 
 # 创建data目录
 mkdir -p data
@@ -128,11 +218,38 @@ echo ""
 TOTAL=${#MODELS[@]}
 CURRENT=0
 
+# 统计实际需要评测的模型
+NEED_EVAL=0
+for MODEL in "${MODELS[@]}"; do
+    if [ "$FORCE_REEVAL" = true ] || ! is_model_evaluated "$MODEL"; then
+        NEED_EVAL=$((NEED_EVAL + 1))
+    fi
+done
+
+echo "开始时间: $(date)"
+echo "需要评测: $NEED_EVAL / ${#MODELS[@]} 个模型"
+echo ""
+
+# 逐个评测模型
+TOTAL=${#MODELS[@]}
+CURRENT=0
+COMPLETED=0
+SKIPPED=0
+
 for MODEL in "${MODELS[@]}"; do
     CURRENT=$((CURRENT + 1))
+
+    # 检查是否已评测
+    if [ "$FORCE_REEVAL" = false ] && is_model_evaluated "$MODEL"; then
+        echo "[$CURRENT/$TOTAL] ⊞ 跳过已评测: $MODEL"
+        SKIPPED=$((SKIPPED + 1))
+        continue
+    fi
+
+    COMPLETED=$((COMPLETED + 1))
     echo ""
     echo "================================"
-    echo "[$CURRENT/$TOTAL] 正在评测: $MODEL"
+    echo "[$CURRENT/$TOTAL] [$COMPLETED/$NEED_EVAL] 正在评测: $MODEL"
     echo "================================"
 
     # 生成模型名称（去除路径和特殊字符）
@@ -165,7 +282,13 @@ echo "================================"
 echo "批量评测完成！"
 echo "================================"
 echo "总模型数: $TOTAL"
+echo "已评测: $COMPLETED"
+echo "跳过: $SKIPPED"
 echo "总耗时: ${MINUTES}分${SECONDS}秒"
 echo "结果文件: data/results.json"
 echo ""
-echo "查看结果: cat data/results.json"
+echo "查看结果:"
+echo "  cat data/results.json | jq '.evaluations | length'"
+echo "  或打开: http://localhost:8001/frontend/index.html"
+echo ""
+echo "提示: 使用 --force 可强制重新评测所有模型"
