@@ -56,7 +56,7 @@ is_model_evaluated() {
     fi
 
     # 使用Python检查JSON中是否存在该model_id
-    python3 -c "
+    local result=$(python3 -c "
 import json
 import sys
 try:
@@ -73,7 +73,9 @@ try:
 except Exception as e:
     print('ERROR')
     sys.exit(2)
-" 2>/dev/null | grep -q 'FOUND'
+" 2>/dev/null)
+
+    [ "$result" = "FOUND" ]
 }
 
 # 显示已评测的模型列表
