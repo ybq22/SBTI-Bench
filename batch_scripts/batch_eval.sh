@@ -1,9 +1,21 @@
 #!/bin/bash
 
 # SBTI批量评测脚本
-# 用法: ./batch_scripts/batch_eval.sh model1 model2 model3 ...
+# 用法1: ./batch_scripts/batch_eval.sh                    # 使用默认模型列表
+# 用法2: ./batch_scripts/batch_eval.sh model1 model2 ...   # 使用自定义模型列表
 
 set -e  # 遇到错误立即退出
+
+# 默认模型列表（你可以根据需要修改这个列表）
+DEFAULT_MODELS=(
+    "openai/gpt-4"
+    "openai/gpt-4-turbo"
+    "anthropic/claude-3-opus"
+    "anthropic/claude-3-sonnet"
+    "google/gemini-pro-1.5"
+    "meta-llama/llama-3-70b"
+    "mistralai/mistral-large"
+)
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
@@ -39,16 +51,23 @@ fi
 # 使用conda环境的python
 PYTHON_CMD="conda run -n sbti python"
 
-# 检查参数
+# 确定要评测的模型列表
 if [ $# -eq 0 ]; then
-    echo "错误: 请提供至少一个模型名称"
-    echo "用法: $0 model1 [model2] [model3] ..."
+    # 没有提供参数，使用默认列表
+    echo "使用默认模型列表（共 ${#DEFAULT_MODELS[@]} 个模型）"
     echo ""
-    echo "示例:"
-    echo "  $0 openai/gpt-4"
-    echo "  $0 openai/gpt-4 anthropic/claude-3-opus"
-    echo "  $0 gpt-4 claude-opus llama-3-70b"
-    exit 1
+    echo "默认模型列表:"
+    for i in "${!DEFAULT_MODELS[@]}"; do
+        echo "  $((i+1)). ${DEFAULT_MODELS[$i]}"
+    done
+    echo ""
+    echo "提示: 你也可以提供自定义模型列表: $0 model1 model2 ..."
+    echo ""
+    MODELS=("${DEFAULT_MODELS[@]}")
+else
+    # 提供了参数，使用命令行参数
+    echo "使用自定义模型列表（共 $# 个模型）"
+    MODELS=("$@")
 fi
 
 # 创建data目录
@@ -59,8 +78,7 @@ START_TIME=$(date +%s)
 echo "开始时间: $(date)"
 echo ""
 
-# 逐个评测模型
-MODELS=("$@")
+# 准备评测
 TOTAL=${#MODELS[@]}
 CURRENT=0
 
