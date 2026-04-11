@@ -48,11 +48,24 @@ class SBTEEvaluator:
         Returns:
             选择的选项值
         """
-        answer = self.llm.evaluate_question(
-            question['text'],
-            question['options']
-        )
-        return answer
+        import sys
+        import time
+
+        start_time = time.time()
+        print(f"    调用API中...", end='', flush=True)
+
+        try:
+            answer = self.llm.evaluate_question(
+                question['text'],
+                question['options']
+            )
+            elapsed = time.time() - start_time
+            print(f"\r    ✓ 完成 ({elapsed:.1f}秒)    ", flush=True)
+            return answer
+        except Exception as e:
+            elapsed = time.time() - start_time
+            print(f"\r    ✗ 失败 ({elapsed:.1f}秒): {str(e)[:50]}")
+            raise
 
     def evaluate_all_questions(self) -> Dict[str, int]:
         """
@@ -67,10 +80,11 @@ class SBTEEvaluator:
 
         # 评测常规问题
         for i, question in enumerate(self.questions, 1):
-            print(f"正在回答问题 {i}/{len(self.questions)}: {question['id']}")
+            print(f"\n[{i}/{len(self.questions)}] 问题: {question['id']}")
+            print(f"    维度: {question['dim']}")
             answer = self.evaluate_question(question)
             self.all_answers[question['id']] = answer
-            print(f"  答案: {answer}")
+            print(f"    答案: {answer}")
 
         # 检查是否需要回答特殊问题
         q1_answer = self.all_answers.get('drink_gate_q1')

@@ -50,7 +50,8 @@ class LLMInterface:
         temperature: float = 0.7,
         max_tokens: int = 1000,
         max_retries: int = 3,
-        retry_delay: float = 1.0
+        retry_delay: float = 1.0,
+        timeout: int = 120
     ):
         """
         初始化LLM接口
@@ -62,11 +63,13 @@ class LLMInterface:
             max_tokens: 最大token数
             max_retries: 最大重试次数
             retry_delay: 重试延迟（秒）
+            timeout: 请求超时时间（秒）
         """
         self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
         self.model = model or os.getenv('DEFAULT_MODEL', 'openai/gpt-4')
         self.temperature = temperature or float(os.getenv('DEFAULT_TEMPERATURE', 0.7))
         self.max_tokens = max_tokens or int(os.getenv('DEFAULT_MAX_TOKENS', 1000))
+        self.timeout = timeout or int(os.getenv('DEFAULT_TIMEOUT', 120))
         self.max_retries = max_retries
         self.retry_delay = retry_delay
 
@@ -105,7 +108,7 @@ class LLMInterface:
                     url,
                     headers=headers,
                     json=data,
-                    timeout=30
+                    timeout=self.timeout
                 )
 
                 # 处理限流
