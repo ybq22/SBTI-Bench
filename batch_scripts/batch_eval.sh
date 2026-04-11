@@ -1,12 +1,15 @@
 #!/bin/bash
 
 # SBTI批量评测脚本
-# 用法1: ./batch_scripts/batch_eval.sh                    # 使用默认模型列表
+# 用法1: ./batch_scripts/batch_eval.sh                    # 使用配置文件或默认模型列表
 # 用法2: ./batch_scripts/batch_eval.sh model1 model2 ...   # 使用自定义模型列表
 
 set -e  # 遇到错误立即退出
 
-# 默认模型列表（你可以根据需要修改这个列表）
+# 配置文件路径
+CONFIG_FILE="$(dirname "${BASH_SOURCE[0]}")/models.conf"
+
+# 默认模型列表（当配置文件不存在时使用）
 DEFAULT_MODELS=(
     "openai/gpt-4"
     "openai/gpt-4-turbo"
@@ -16,6 +19,27 @@ DEFAULT_MODELS=(
     "meta-llama/llama-3-70b"
     "mistralai/mistral-large"
 )
+
+# 从配置文件加载模型列表
+load_models_from_config() {
+    local config_file="$1"
+    local models=()
+
+    if [ -f "$config_file" ]; then
+        # 读取配置文件，过滤空行和注释
+        while IFS= read -r line || [ -n "$line" ]; do
+            # 去除首尾空格
+            line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+            # 跳过空行和注释
+            if [ -n "$line" ] && [[ ! "$line" =~ ^# ]]; then
+                models+=("$line")
+            fi
+        done < "$config_file"
+    fi
+
+    echo "${models[@]}"
+}
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
@@ -53,17 +77,39 @@ PYTHON_CMD="conda run -n sbti python"
 
 # 确定要评测的模型列表
 if [ $# -eq 0 ]; then
-    # 没有提供参数，使用默认列表
-    echo "使用默认模型列表（共 ${#DEFAULT_MODELS[@]} 个模型）"
+    # 没有提供参数，尝试从配置文件加载
+    CONFIG_MODELS=($(load_models_from_config "$CONFIG_FILE"))
+
+    if [ ${#CONFIG_MODELS[@]} -gt 0 ]; then
+        # 配置文件存在且有模型
+        echo "使用配置文件模型列表（共 ${#CONFIG_MODELS[@]} 个模型）"
+        echo "配置文件: $CONFIG_FILE"
+        echo ""
+        echo "模型列表:"
+        for i in "${!CONFIG_MODELS[@]}"; do
+            echo "  $((i+1)). ${CONFIG_MODELS[$i]}"
+        done
+        echo ""
+        MODELS=("${CONFIG_MODELS[@]}")
+    else
+        # 配置文件不存在或为空，使用默认列表
+        echo "使用默认模型列表（共 ${#DEFAULT_MODELS[@]} 个模型）"
+        if [ ! -f "$CONFIG_FILE" ]; then
+            echo "提示: 创建 $CONFIG_FILE 可以自定义默认模型列表"
+        else
+            echo "提示: 配置文件为空，使用内置默认列表"
+        fi
+        echo ""
+        echo "默认模型列表:"
+        for i in "${!DEFAULT_MODELS[@]}"; do
+            echo "  $((i+1)). ${DEFAULT_MODELS[$i]}"
+        done
+        echo ""
+        MODELS=("${DEFAULT_MODELS[@]}")
+    fi
+
+    echo "你也可以提供自定义模型列表: $0 model1 model2 ..."
     echo ""
-    echo "默认模型列表:"
-    for i in "${!DEFAULT_MODELS[@]}"; do
-        echo "  $((i+1)). ${DEFAULT_MODELS[$i]}"
-    done
-    echo ""
-    echo "提示: 你也可以提供自定义模型列表: $0 model1 model2 ..."
-    echo ""
-    MODELS=("${DEFAULT_MODELS[@]}")
 else
     # 提供了参数，使用命令行参数
     echo "使用自定义模型列表（共 $# 个模型）"
