@@ -122,10 +122,8 @@ class SBTEEvaluator:
             is_special = True
         else:
             sbiti_type = match_result['code']
-            # 从类型库获取中文名称
-            all_data = get_all_data()
-            type_library = all_data.get('TYPE_LIBRARY', {})
-            chinese_name = type_library.get(sbiti_type, {}).get('cn', sbiti_type)
+            # 优先使用 matcher 返回的中文名称，其次从类型库获取
+            chinese_name = match_result.get('cn', sbiti_type)
             is_special = match_result.get('special', False)
 
         return {

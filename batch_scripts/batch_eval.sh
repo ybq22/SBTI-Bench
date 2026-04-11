@@ -21,12 +21,23 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# 检查Python依赖
-if ! python3 -c "import requests" 2>/dev/null; then
-    echo "错误: Python依赖未安装"
-    echo "请运行: pip install -r backend/requirements.txt"
+# 检查conda环境
+if ! conda env list | grep -q "^sbti "; then
+    echo "错误: sbti conda环境不存在"
+    echo "请先创建环境: conda create -n sbti python=3.10"
     exit 1
 fi
+
+# 检查Python依赖（使用conda环境）
+echo "检查依赖..."
+if ! conda run -n sbti python -c "import requests" 2>/dev/null; then
+    echo "错误: sbti环境中的Python依赖未安装"
+    echo "请运行: conda activate sbti && pip install -r backend/requirements.txt"
+    exit 1
+fi
+
+# 使用conda环境的python
+PYTHON_CMD="conda run -n sbti python"
 
 # 检查参数
 if [ $# -eq 0 ]; then
@@ -64,7 +75,7 @@ for MODEL in "${MODELS[@]}"; do
     MODEL_NAME=$(basename "$MODEL" | sed 's/[^a-zA-Z0-9_-]/_/g')
 
     # 运行评测
-    if python3 -m backend.evaluator "$MODEL_NAME" "$MODEL"; then
+    if $PYTHON_CMD -m backend.evaluator "$MODEL_NAME" "$MODEL"; then
         echo "✓ $MODEL 评测完成"
     else
         echo "✗ $MODEL 评测失败"
