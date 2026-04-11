@@ -57,9 +57,24 @@ python -m backend.evaluator "GPT-4" "openai/gpt-4"
 cat data/results.json | jq '.evaluations[-1]'
 ```
 
-**方式2: 打开前端页面**
+**方式2: 使用前端页面（推荐）**
 
-在浏览器中打开 `frontend/index.html` 查看可视化排行榜。
+⚠️ **重要**：由于浏览器CORS限制，不能直接打开HTML文件，需要使用HTTP服务器：
+
+```bash
+# 使用提供的启动脚本（最简单）
+./start_server.sh
+
+# 或手动启动
+python3 -m http.server 8000
+```
+
+然后在浏览器中访问：`http://localhost:8000/frontend/index.html`
+
+**方式3: 诊断工具**
+
+如果前端无法加载，可以打开诊断工具：
+`http://localhost:8000/frontend/diagnose.html`
 
 ## 项目结构
 
