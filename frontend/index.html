@@ -156,15 +156,52 @@
     <script>
         async function loadResults() {
             try {
+                // 尝试加载数据
                 const response = await fetch('../data/results.json');
+
                 if (!response.ok) {
-                    throw new Error('无法加载结果数据');
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
+
                 const data = await response.json();
                 displayResults(data);
+
             } catch (error) {
+                console.error('加载数据失败:', error);
+
+                let errorMsg = error.message;
+                let suggestion = '';
+
+                // 根据错误类型提供不同的建议
+                if (error.message.includes('Failed to fetch')) {
+                    errorMsg = '无法加载数据文件（可能是CORS限制）';
+                    suggestion = `
+                        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+                            <h3>💡 解决方案：</h3>
+                            <p><strong>方法1（推荐）：</strong>启动HTTP服务器</p>
+                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">./start_server.sh</pre>
+                            <p>然后在浏览器中打开：<code>http://localhost:8000/frontend/index.html</code></p>
+
+                            <p style="margin-top: 15px;"><strong>方法2：</strong>使用Python内置服务器</p>
+                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">python3 -m http.server 8000</pre>
+                            <p>然后访问：<code>http://localhost:8000/frontend/index.html</code></p>
+                        </div>
+                    `;
+                } else if (error.message.includes('JSON')) {
+                    errorMsg = '数据文件格式错误';
+                    suggestion = '<p>请检查 data/results.json 文件格式是否正确</p>';
+                } else {
+                    suggestion = '<p>请确保已经运行评测并生成 data/results.json 文件</p>';
+                }
+
                 document.getElementById('content').innerHTML =
-                    `<div class="error">错误: ${error.message}<br>请确保已经运行评测并生成 data/results.json 文件</div>`;
+                    `<div class="error">
+                        <h3>❌ ${errorMsg}</h3>
+                        ${suggestion}
+                        <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                            详细错误: ${error.message}
+                        </p>
+                    </div>`;
             }
         }
 
