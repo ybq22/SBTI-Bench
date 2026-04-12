@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SBTI-Bench - 大模型人格评测基准</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,133 +12,399 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
             min-height: 100vh;
             padding: 20px;
+            color: var(--text-primary);
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
         .header {
             text-align: center;
-            color: white;
             margin-bottom: 40px;
+            animation: fadeInDown 0.6s ease-out;
         }
 
         .header h1 {
             font-size: 3em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header p {
             font-size: 1.2em;
-            opacity: 0.9;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .stat-card .icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95em;
+            margin-top: 5px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
         }
 
         .card {
-            background: white;
-            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
             padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px var(--shadow);
         }
 
-        .card h2 {
-            color: #667eea;
-            margin-bottom: 20px;
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-header .icon {
             font-size: 1.8em;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .stat-box .number {
-            font-size: 2.5em;
-            font-weight: bold;
-        }
-
-        .stat-box .label {
-            font-size: 0.9em;
-            opacity: 0.9;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
+        thead tr {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
         }
 
         th {
-            background: #f5f5f5;
-            color: #667eea;
+            padding: 15px;
+            text-align: left;
             font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
         }
 
-        tr:hover {
-            background: #f9f9f9;
+        td {
+            padding: 18px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .model-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.05em;
+        }
+
+        .model-id {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            margin-top: 4px;
         }
 
         .type-badge {
             display: inline-block;
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.9em;
+            font-size: 0.85em;
             font-weight: 600;
-        }
-
-        .type-badge.special {
-            background: #ff6b6b;
-            color: white;
+            letter-spacing: 0.5px;
         }
 
         .type-badge.normal {
-            background: #51cf66;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
+        }
+
+        .type-badge.special {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .chinese-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .similarity {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .similarity.high {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .similarity.medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .similarity.low {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .date {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+
+        .type-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .type-item {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .type-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            transform: translateX(5px);
+        }
+
+        .type-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .type-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .type-count {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .type-name {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .type-models {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            margin-top: 8px;
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            color: white;
-            font-size: 1.2em;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
 
         .error {
-            background: #ff6b6b;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 30px;
+            border-radius: 12px;
             text-align: center;
         }
 
         .empty {
             text-align: center;
-            padding: 40px;
-            color: #999;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
+
+        .suggestions {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .suggestions h3 {
+            color: #fcd34d;
+            margin-bottom: 15px;
+        }
+
+        .suggestions pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .suggestions code {
+            color: #a5f3fc;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
         }
     </style>
 </head>
@@ -145,64 +412,61 @@
     <div class="container">
         <div class="header">
             <h1>🧠 SBTI-Bench</h1>
-            <p>大模型人格评测基准 - 排行榜与分类</p>
+            <p>大模型人格评测基准排行榜</p>
         </div>
 
         <div id="content">
-            <div class="loading">加载中...</div>
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>加载评测数据...</p>
+            </div>
         </div>
     </div>
 
     <script>
         async function loadResults() {
             try {
-                // 尝试加载数据
                 const response = await fetch('../data/results.json');
-
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-
                 const data = await response.json();
                 displayResults(data);
-
             } catch (error) {
                 console.error('加载数据失败:', error);
-
-                let errorMsg = error.message;
-                let suggestion = '';
-
-                // 根据错误类型提供不同的建议
-                if (error.message.includes('Failed to fetch')) {
-                    errorMsg = '无法加载数据文件（可能是CORS限制）';
-                    suggestion = `
-                        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
-                            <h3>💡 解决方案：</h3>
-                            <p><strong>方法1（推荐）：</strong>启动HTTP服务器</p>
-                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">./start_server.sh</pre>
-                            <p>然后在浏览器中打开：<code>http://localhost:8000/frontend/index.html</code></p>
-
-                            <p style="margin-top: 15px;"><strong>方法2：</strong>使用Python内置服务器</p>
-                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">python3 -m http.server 8000</pre>
-                            <p>然后访问：<code>http://localhost:8000/frontend/index.html</code></p>
-                        </div>
-                    `;
-                } else if (error.message.includes('JSON')) {
-                    errorMsg = '数据文件格式错误';
-                    suggestion = '<p>请检查 data/results.json 文件格式是否正确</p>';
-                } else {
-                    suggestion = '<p>请确保已经运行评测并生成 data/results.json 文件</p>';
-                }
-
-                document.getElementById('content').innerHTML =
-                    `<div class="error">
-                        <h3>❌ ${errorMsg}</h3>
-                        ${suggestion}
-                        <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
-                            详细错误: ${error.message}
-                        </p>
-                    </div>`;
+                displayError(error);
             }
+        }
+
+        function displayError(error) {
+            let errorMsg = error.message;
+            let suggestion = '';
+
+            if (error.message.includes('Failed to fetch')) {
+                errorMsg = '无法加载数据文件（CORS限制）';
+                suggestion = `
+                    <div class="suggestions">
+                        <h3>💡 解决方案</h3>
+                        <p><strong>方法1（推荐）：</strong>启动HTTP服务器</p>
+                        <pre>./start_server.sh</pre>
+                        <p>然后访问：<code>http://localhost:8001/frontend/index.html</code></p>
+
+                        <p style="margin-top: 15px;"><strong>方法2：</strong>手动启动服务器</p>
+                        <pre>python3 -m http.server 8001</pre>
+                    </div>
+                `;
+            } else if (error.message.includes('JSON')) {
+                errorMsg = '数据文件格式错误';
+                suggestion = '<p>请检查 data/results.json 文件格式</p>';
+            } else {
+                suggestion = '<p>请先运行评测生成数据文件</p>';
+            }
+
+            document.getElementById('content').innerHTML =
+                `<div class="error">
+                    <h3>❌ ${errorMsg}</h3>
+                    ${suggestion}
+                </div>`;
         }
 
         function displayResults(data) {
@@ -210,7 +474,7 @@
 
             if (evaluations.length === 0) {
                 document.getElementById('content').innerHTML =
-                    '<div class="card empty">暂无评测数据<br><br>请运行评测脚本: python -m backend.evaluator "Model Name" "model-id"</div>';
+                    '<div class="empty">暂无评测数据<br><br>请运行评测脚本：<code>python -m backend.evaluator "Model" "model-id"</code></div>';
                 return;
             }
 
@@ -218,81 +482,95 @@
             const totalModels = evaluations.length;
             const typeCounts = {};
             evaluations.forEach(eval => {
-                const type = eval.sbiti_type;
-                typeCounts[type] = (typeCounts[type] || 0) + 1;
+                typeCounts[eval.sbiti_type] = (typeCounts[eval.sbiti_type] || 0) + 1;
             });
-
             const uniqueTypes = Object.keys(typeCounts).length;
 
             // 生成HTML
             let html = `
-                <div class="card">
-                    <h2>📊 统计概览</h2>
-                    <div class="stats">
-                        <div class="stat-box">
-                            <div class="number">${totalModels}</div>
-                            <div class="label">已评测模型</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="number">${uniqueTypes}</div>
-                            <div class="label">SBTI类型分布</div>
-                        </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="icon">📊</div>
+                        <div class="number">${totalModels}</div>
+                        <div class="label">已评测模型</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon">🎭</div>
+                        <div class="number">${uniqueTypes}</div>
+                        <div class="label">SBTI类型</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon">🏆</div>
+                        <div class="number">${typeCounts['GOGO'] || 0}</div>
+                        <div class="label">最常见类型</div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2>🏆 模型排行榜</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>模型名称</th>
-                                <th>SBTI类型</th>
-                                <th>中文名</th>
-                                <th>匹配度</th>
-                                <th>评测时间</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="main-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>🏆 模型排行榜</h2>
+                            <div class="icon">📋</div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>排名</th>
+                                    <th>模型</th>
+                                    <th>SBTI类型</th>
+                                    <th>匹配度</th>
+                                </tr>
+                            </thead>
+                            <tbody>
             `;
 
             evaluations.forEach((eval, index) => {
-                const date = new Date(eval.evaluation_date).toLocaleString('zh-CN');
+                const date = new Date(eval.evaluation_date).toLocaleString('zh-CN', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
                 const isSpecial = eval.is_special || false;
                 const badgeClass = isSpecial ? 'special' : 'normal';
 
+                let similarityClass = 'low';
+                if (eval.match_similarity >= 80) similarityClass = 'high';
+                else if (eval.match_similarity >= 60) similarityClass = 'medium';
+
                 html += `
                     <tr>
-                        <td>${index + 1}</td>
-                        <td><strong>${eval.model_name}</strong><br><small>${eval.model_id}</small></td>
-                        <td><span class="type-badge ${badgeClass}">${eval.sbiti_type}</span></td>
-                        <td>${eval.chinese_name}</td>
-                        <td>${eval.match_similarity}%</td>
-                        <td><small>${date}</small></td>
+                        <td><strong>#${index + 1}</strong></td>
+                        <td>
+                            <div class="model-name">${eval.model_name}</div>
+                            <div class="model-id">${eval.model_id}</div>
+                        </td>
+                        <td>
+                            <span class="type-badge ${badgeClass}">${eval.sbiti_type}</span>
+                            <span style="margin-left: 8px; color: var(--text-secondary);">${eval.chinese_name}</span>
+                        </td>
+                        <td>
+                            <span class="similarity ${similarityClass}">${eval.match_similarity}%</span>
+                        </td>
                     </tr>
                 `;
             });
 
             html += `
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
 
-                <div class="card">
-                    <h2>📈 SBTI类型分布</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>类型代码</th>
-                                <th>中文名</th>
-                                <th>模型数量</th>
-                                <th>占比</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>📈 类型分布</h2>
+                            <div class="icon">🎭</div>
+                        </div>
+                        <div class="type-list">
             `;
 
-            // 按类型分组
+            // 按类型分组并排序
             const typeGroups = {};
             evaluations.forEach(eval => {
                 const type = eval.sbiti_type;
@@ -300,39 +578,48 @@
                     typeGroups[type] = {
                         chineseName: eval.chinese_name,
                         count: 0,
-                        isSpecial: eval.is_special
+                        isSpecial: eval.is_special,
+                        models: []
                     };
                 }
                 typeGroups[type].count++;
+                typeGroups[type].models.push(eval.model_name);
             });
 
-            // 排序
             const sortedTypes = Object.entries(typeGroups).sort((a, b) => b[1].count - a[1].count);
 
-            sortedTypes.forEach(([type, info]) => {
+            sortedTypes.forEach(([type, info], index) => {
                 const percentage = ((info.count / totalModels) * 100).toFixed(1);
                 const badgeClass = info.isSpecial ? 'special' : 'normal';
 
                 html += `
-                    <tr>
-                        <td><span class="type-badge ${badgeClass}">${type}</span></td>
-                        <td>${info.chineseName}</td>
-                        <td>${info.count}</td>
-                        <td>${percentage}%</td>
-                    </tr>
+                    <div class="type-item" style="animation-delay: ${index * 0.05}s">
+                        <div class="type-header">
+                            <div class="type-info">
+                                <span class="type-badge ${badgeClass}">${type}</span>
+                                <span class="type-name">${info.chineseName}</span>
+                            </div>
+                            <span class="type-count">${info.count}</span>
+                        </div>
+                        <div class="type-models">
+                            ${info.models.join(' · ')}
+                        </div>
+                        <div style="margin-top: 8px; color: var(--text-secondary); font-size: 0.85em;">
+                            占比 ${percentage}%
+                        </div>
+                    </div>
                 `;
             });
 
             html += `
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
             `;
 
             document.getElementById('content').innerHTML = html;
         }
 
-        // 页面加载时获取数据
         window.addEventListener('DOMContentLoaded', loadResults);
     </script>
 </body>
