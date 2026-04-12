@@ -10,22 +10,22 @@
     <style>
         /* ===== DESIGN TOKENS ===== */
         :root {
-            /* Brand hue: Warm peachy-coral for playfulness */
-            --brand-hue: 25;
-            --brand-chroma: 0.18;
+            /* Brand hue: Deep blue-purple for sophistication */
+            --brand-hue: 220;
+            --brand-chroma: 0.06;
 
             /* Light mode tokens */
-            --color-bg: oklch(0.98 0.005 var(--brand-hue));
-            --color-bg-alt: oklch(0.94 0.008 var(--brand-hue));
-            --color-surface: oklch(1 0.003 var(--brand-hue));
-            --color-text: oklch(0.2 0.015 var(--brand-hue));
-            --color-text-muted: oklch(0.45 0.02 var(--brand-hue));
-            --color-border: oklch(0.88 0.01 var(--brand-hue));
-            --color-primary: oklch(0.65 0.18 var(--brand-hue));
-            --color-primary-dark: oklch(0.55 0.16 var(--brand-hue));
-            --color-success: oklch(0.65 0.15 145);
-            --color-warning: oklch(0.7 0.12 85);
-            --color-error: oklch(0.6 0.18 25);
+            --color-bg: oklch(0.98 0.003 var(--brand-hue));
+            --color-bg-alt: oklch(0.94 0.005 var(--brand-hue));
+            --color-surface: oklch(1 0.002 var(--brand-hue));
+            --color-text: oklch(0.2 0.008 var(--brand-hue));
+            --color-text-muted: oklch(0.5 0.012 var(--brand-hue));
+            --color-border: oklch(0.88 0.008 var(--brand-hue));
+            --color-primary: oklch(0.55 0.08 var(--brand-hue));
+            --color-primary-dark: oklch(0.45 0.10 var(--brand-hue));
+            --color-success: oklch(0.6 0.08 150);
+            --color-warning: oklch(0.65 0.06 85);
+            --color-error: oklch(0.55 0.10 25);
 
             /* Spacing scale (4pt base) */
             --space-xs: 4px;
@@ -64,14 +64,14 @@
 
         /* Dark mode tokens */
         [data-theme="dark"] {
-            --color-bg: oklch(0.15 0.012 var(--brand-hue));
-            --color-bg-alt: oklch(0.18 0.015 var(--brand-hue));
-            --color-surface: oklch(0.22 0.018 var(--brand-hue));
-            --color-text: oklch(0.95 0.005 var(--brand-hue));
-            --color-text-muted: oklch(0.7 0.01 var(--brand-hue));
-            --color-border: oklch(0.3 0.02 var(--brand-hue));
-            --color-primary: oklch(0.72 0.16 var(--brand-hue));
-            --color-primary-dark: oklch(0.78 0.14 var(--brand-hue));
+            --color-bg: oklch(0.12 0.008 var(--brand-hue));
+            --color-bg-alt: oklch(0.16 0.010 var(--brand-hue));
+            --color-surface: oklch(0.20 0.012 var(--brand-hue));
+            --color-text: oklch(0.94 0.004 var(--brand-hue));
+            --color-text-muted: oklch(0.65 0.008 var(--brand-hue));
+            --color-border: oklch(0.25 0.015 var(--brand-hue));
+            --color-primary: oklch(0.65 0.10 var(--brand-hue));
+            --color-primary-dark: oklch(0.70 0.08 var(--brand-hue));
         }
 
         /* ===== RESET & BASE ===== */
@@ -349,13 +349,13 @@
         }
 
         .type-badge.normal {
-            background: oklch(0.92 0.05 145);
-            color: oklch(0.3 0.15 145);
+            background: oklch(0.94 0.04 150);
+            color: oklch(0.25 0.08 150);
         }
 
         .type-badge.special {
-            background: oklch(0.92 0.08 25);
-            color: oklch(0.4 0.18 25);
+            background: oklch(0.94 0.06 25);
+            color: oklch(0.35 0.10 25);
         }
 
         .model-card-details {
@@ -388,18 +388,18 @@
         }
 
         .similarity-badge.high {
-            background: oklch(0.92 0.05 145);
-            color: oklch(0.35 0.15 145);
+            background: oklch(0.94 0.04 150);
+            color: oklch(0.30 0.08 150);
         }
 
         .similarity-badge.medium {
-            background: oklch(0.92 0.06 85);
-            color: oklch(0.45 0.15 85);
+            background: oklch(0.94 0.05 85);
+            color: oklch(0.40 0.08 85);
         }
 
         .similarity-badge.low {
-            background: oklch(0.92 0.06 25);
-            color: oklch(0.45 0.18 25);
+            background: oklch(0.94 0.05 25);
+            color: oklch(0.40 0.10 25);
         }
 
         .pattern-info {
@@ -667,13 +667,13 @@
         }
 
         .modal-type-badge.normal {
-            background: oklch(0.92 0.05 145);
-            color: oklch(0.3 0.15 145);
+            background: oklch(0.94 0.04 150);
+            color: oklch(0.25 0.08 150);
         }
 
         .modal-type-badge.special {
-            background: oklch(0.92 0.08 25);
-            color: oklch(0.4 0.18 25);
+            background: oklch(0.94 0.06 25);
+            color: oklch(0.35 0.10 25);
         }
 
         .modal-close {
@@ -784,18 +784,18 @@
         }
 
         .dimension-level.L {
-            background: oklch(0.92 0.05 25);
-            color: oklch(0.4 0.15 25);
+            background: oklch(0.94 0.04 25);
+            color: oklch(0.35 0.10 25);
         }
 
         .dimension-level.M {
-            background: oklch(0.92 0.06 85);
-            color: oklch(0.45 0.15 85);
+            background: oklch(0.94 0.05 85);
+            color: oklch(0.40 0.08 85);
         }
 
         .dimension-level.H {
-            background: oklch(0.92 0.05 145);
-            color: oklch(0.35 0.15 145);
+            background: oklch(0.94 0.04 150);
+            color: oklch(0.30 0.08 150);
         }
 
         .dimension-score {
