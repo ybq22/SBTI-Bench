@@ -1478,18 +1478,18 @@
         function getTypeImagePath(sbitiType, fallback = false) {
             if (!fallback) {
                 // Try exact match first (handles Dior-s.jpg, JOKE-R.jpg, etc.)
-                return `../image/${sbitiType}.jpg`;
+                return `./image/${sbitiType}.jpg`;
             } else {
                 // Fallback: try .png or clean the type name
                 const cleanType = sbitiType.replace(/[^a-zA-Z0-9-]/g, '');
-                return `../image/${cleanType}.png`;
+                return `./image/${cleanType}.png`;
             }
         }
 
         // Data loading
         async function loadResults() {
             try {
-                const response = await fetch('../data/results.json');
+                const response = await fetch('./data/results.json');
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
