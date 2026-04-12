@@ -1,0 +1,79 @@
+{
+  "evaluations": [
+    {
+      "model_name": "GPT-4",
+      "model_id": "openai/gpt-4",
+      "sbiti_type": "CTRL",
+      "chinese_name": "拿捏者",
+      "is_special": false,
+      "match_similarity": 95,
+      "exact_dimensions": 14,
+      "pattern": "HHH-HMH-MHH-HHH-MHM",
+      "evaluation_date": "2026-04-12T00:00:00Z",
+      "raw_scores": {
+        "S1": 5, "S2": 6, "S3": 5,
+        "E1": 6, "E2": 5, "E3": 5,
+        "A1": 6, "A2": 5, "A3": 6,
+        "Ac1": 6, "Ac2": 5, "Ac3": 6,
+        "So1": 6, "So2": 6, "So3": 5
+      },
+      "levels": {
+        "S1": "H", "S2": "H", "S3": "H",
+        "E1": "H", "E2": "H", "E3": "H",
+        "A1": "H", "A2": "H", "A3": "H",
+        "Ac1": "H", "Ac2": "H", "Ac3": "H",
+        "So1": "H", "So2": "H", "So3": "H"
+      }
+    },
+    {
+      "model_name": "Claude-3.5-Sonnet",
+      "model_id": "anthropic/claude-3.5-sonnet",
+      "sbiti_type": "THIN-K",
+      "chinese_name": "思考者",
+      "is_special": false,
+      "match_similarity": 88,
+      "exact_dimensions": 12,
+      "pattern": "HHL-HMH-MLH-MHM-LHH",
+      "evaluation_date": "2026-04-12T00:00:00Z",
+      "raw_scores": {
+        "S1": 6, "S2": 6, "S3": 5,
+        "E1": 6, "E2": 5, "E3": 5,
+        "A1": 5, "A2": 5, "A3": 4,
+        "Ac1": 5, "Ac2": 5, "Ac3": 6,
+        "So1": 5, "So2": 6, "So3": 5
+      },
+      "levels": {
+        "S1": "H", "S2": "H", "S3": "H",
+        "E1": "H", "E2": "H", "E3": "H",
+        "A1": "H", "A2": "H", "A3": "M",
+        "Ac1": "H", "Ac2": "H", "Ac3": "H",
+        "So1": "H", "So2": "H", "So3": "H"
+      }
+    },
+    {
+      "model_name": "Llama-3-70B",
+      "model_id": "meta-llama/llama-3-70b",
+      "sbiti_type": "GOGO",
+      "chinese_name": "行者",
+      "is_special": false,
+      "match_similarity": 92,
+      "exact_dimensions": 13,
+      "pattern": "HHM-HMH-MMH-HHH-MHM",
+      "evaluation_date": "2026-04-12T00:00:00Z",
+      "raw_scores": {
+        "S1": 6, "S2": 5, "S3": 5,
+        "E1": 6, "E2": 5, "E3": 5,
+        "A1": 5, "A2": 5, "A3": 5,
+        "Ac1": 5, "Ac2": 5, "Ac3": 6,
+        "So1": 6, "So2": 6, "So3": 5
+      },
+      "levels": {
+        "S1": "H", "S2": "H", "S3": "H",
+        "E1": "H", "E2": "H", "E3": "H",
+        "A1": "H", "A2": "H", "A3": "H",
+        "Ac1": "H", "Ac2": "H", "Ac3": "H",
+        "So1": "H", "So2": "H", "So3": "H"
+      }
+    }
+  ]
+}
