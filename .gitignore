@@ -29,3 +29,17 @@ data/*.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code & AI Tools
+.agents/
+.claude/
+skills-lock.json
+.impeccable.md
+
+# Temporary documentation
+*.md.bak
+*_FIX.md
+
+# Design drafts (keep only final versions in docs/)
+docs/superpowers/plans/
+docs/superpowers/design-*.md
