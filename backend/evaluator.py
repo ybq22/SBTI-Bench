@@ -167,7 +167,7 @@ class SBTEEvaluator:
         output_file: str = 'data/results.json'
     ):
         """
-        保存评测结果
+        保存评测结果（同一个model_id只保留最新结果）
 
         Args:
             result: 评测结果字典
@@ -186,8 +186,15 @@ class SBTEEvaluator:
                 except json.JSONDecodeError:
                     pass
 
+        # 删除相同model_id的旧结果（只保留最新的）
+        model_id = result['model_id']
+        existing_results = [r for r in existing_results if r['model_id'] != model_id]
+
         # 添加新结果
         existing_results.append(result)
+
+        # 按评测时间排序
+        existing_results.sort(key=lambda x: x['evaluation_date'], reverse=True)
 
         # 保存
         with open(output_path, 'w', encoding='utf-8') as f:
@@ -197,7 +204,7 @@ class SBTEEvaluator:
                 'evaluations': existing_results
             }, f, indent=2, ensure_ascii=False)
 
-        print(f"结果已保存到: {output_file}")
+        print(f"结果已保存到: {output_file} ({model_id})")
 
     def run(self, output_file: str = 'data/results.json') -> Dict[str, Any]:
         """
