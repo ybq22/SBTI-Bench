@@ -1474,22 +1474,37 @@
                 .join('-');
         }
 
+        // Path helper - works in both local and GitHub Pages environments
+        function getBasePath() {
+            // Check if we're on GitHub Pages (no 'frontend' in path)
+            const path = window.location.pathname;
+            if (path.includes('/frontend/') || path.endsWith('/frontend')) {
+                // Local development: /frontend/index.html
+                return '../';
+            } else {
+                // GitHub Pages: /index.html
+                return './';
+            }
+        }
+
         // Get image path for SBTI type
         function getTypeImagePath(sbitiType, fallback = false) {
+            const basePath = getBasePath();
             if (!fallback) {
                 // Try exact match first (handles Dior-s.jpg, JOKE-R.jpg, etc.)
-                return `../image/${sbitiType}.jpg`;
+                return `${basePath}image/${sbitiType}.jpg`;
             } else {
                 // Fallback: try .png or clean the type name
                 const cleanType = sbitiType.replace(/[^a-zA-Z0-9-]/g, '');
-                return `../image/${cleanType}.png`;
+                return `${basePath}image/${cleanType}.png`;
             }
         }
 
         // Data loading
         async function loadResults() {
             try {
-                const response = await fetch('../data/results.json');
+                const basePath = getBasePath();
+                const response = await fetch(`${basePath}data/results.json`);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
