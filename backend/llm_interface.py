@@ -43,6 +43,9 @@ def parse_answer(response_text: str) -> int:
 class LLMInterface:
     """大语言模型接口"""
 
+    # Paratera API支持的模型列表
+    PARATERA_MODELS = ['Kimi-K2.5', 'moonshotai/kimi-k2.5']
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -51,21 +54,22 @@ class LLMInterface:
         max_tokens: int = 1000,
         max_retries: int = 3,
         retry_delay: float = 1.0,
-        timeout: int = 120
+        timeout: int = 120,
+        base_url: Optional[str] = None
     ):
         """
         初始化LLM接口
 
         Args:
-            api_key: OpenRouter API密钥
+            api_key: API密钥（可选，默认根据模型自动选择）
             model: 模型名称
             temperature: 温度参数
             max_tokens: 最大token数
             max_retries: 最大重试次数
             retry_delay: 重试延迟（秒）
             timeout: 请求超时时间（秒）
+            base_url: API基础URL（可选，默认根据模型自动选择）
         """
-        self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
         self.model = model or os.getenv('DEFAULT_MODEL', 'openai/gpt-4')
         self.temperature = temperature or float(os.getenv('DEFAULT_TEMPERATURE', 0.7))
         self.max_tokens = max_tokens or int(os.getenv('DEFAULT_MAX_TOKENS', 1000))
@@ -73,8 +77,25 @@ class LLMInterface:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
 
-        if not self.api_key:
-            raise ValueError("OPENROUTER_API_KEY is required")
+        # 根据模型选择API配置
+        self.use_paratera = self._should_use_paratera()
+
+        if self.use_paratera:
+            # 使用Paratera API
+            self.api_key = api_key or os.getenv('PARATERA_API_KEY')
+            self.base_url = base_url or os.getenv('PARATERA_BASE_URL', 'https://llmapi.paratera.com')
+            if not self.api_key:
+                raise ValueError("PARATERA_API_KEY is required for this model")
+        else:
+            # 使用OpenRouter API
+            self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
+            self.base_url = base_url or 'https://openrouter.ai/api/v1'
+            if not self.api_key:
+                raise ValueError("OPENROUTER_API_KEY is required")
+
+    def _should_use_paratera(self) -> bool:
+        """判断是否应该使用Paratera API"""
+        return self.model in self.PARATERA_MODELS
 
     def call_model(self, prompt: str) -> str:
         """
@@ -86,7 +107,7 @@ class LLMInterface:
         Returns:
             模型回答
         """
-        url = "https://openrouter.ai/api/v1/chat/completions"
+        url = f"{self.base_url}/chat/completions"
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",

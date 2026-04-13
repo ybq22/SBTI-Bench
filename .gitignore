@@ -44,3 +44,6 @@ skills-lock.json
 # Design drafts (keep only final versions in docs/)
 docs/superpowers/plans/
 docs/superpowers/design-*.md
+
+# Local API smoke test
+test_api_access_local.py
