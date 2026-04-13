@@ -13,9 +13,10 @@ __pycache__/
 .coverage
 htmlcov/
 
-# Data files
-data/results.json
-data/*.json
+# Data files (保留评测结果，但忽略临时文件)
+# data/results.json  # 已取消注释，需要提交到GitHub
+data/*.tmp
+data/*.bak
 
 # Logs
 *.log

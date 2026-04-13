@@ -1027,14 +1027,14 @@
                     <div class="modal-section">
                         <h3 class="modal-section-title">文档</h3>
                         <div style="display: flex; gap: var(--space-md); flex-wrap: wrap;">
-                            <a href="../README.md" target="_blank" class="doc-link">
+                            <a href="https://github.com/yuebaoqing/SBTI-Bench/blob/main/README.md" target="_blank" class="doc-link">
                                 <span class="doc-icon">📄</span>
                                 <div class="doc-content">
                                     <div class="doc-title">中文文档</div>
                                     <div class="doc-desc">README.md</div>
                                 </div>
                             </a>
-                            <a href="../README_EN.md" target="_blank" class="doc-link">
+                            <a href="https://github.com/yuebaoqing/SBTI-Bench/blob/main/README_EN.md" target="_blank" class="doc-link">
                                 <span class="doc-icon">📄</span>
                                 <div class="doc-content">
                                     <div class="doc-title">English Docs</div>
@@ -1063,57 +1063,44 @@
                 </div>
             </div>
         </div>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="modal-title-section">
-                        <img id="modalTypeImage" class="modal-type-image" src="" alt="">
-                        <div class="modal-title-info">
-                            <div id="modalModelName" class="modal-model-name"></div>
-                            <div id="modalModelId" class="modal-model-id"></div>
-                            <span id="modalTypeBadge" class="modal-type-badge"></span>
-                        </div>
-                    </div>
-                    <button class="modal-close" onclick="closeModal()" aria-label="关闭">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="modal-section">
-                        <h3 class="modal-section-title">评测概览</h3>
-                        <div class="modal-stats">
-                            <div class="modal-stat-item">
-                                <div class="modal-stat-label">SBTI类型</div>
-                                <div id="modalTypeName" class="modal-stat-value"></div>
-                            </div>
-                            <div class="modal-stat-item">
-                                <div class="modal-stat-label">匹配度</div>
-                                <div id="modalSimilarity" class="modal-stat-value"></div>
-                            </div>
-                            <div class="modal-stat-item">
-                                <div class="modal-stat-label">精确匹配</div>
-                                <div id="modalExactMatch" class="modal-stat-value"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-section">
-                        <h3 class="modal-section-title">类型描述</h3>
-                        <div id="modalTypeDesc" class="type-description"></div>
-                    </div>
-
-                    <div class="modal-section">
-                        <h3 class="modal-section-title">15维度详细分析</h3>
-                        <div id="modalDimensions" class="dimensions-grid"></div>
-                    </div>
-
-                    <div class="modal-section">
-                        <h3 class="modal-section-title">LMH模式</h3>
-                        <div id="modalPattern" class="pattern-display"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
+        // 智能路径检测 - 自动适配本地和GitHub Pages
+        function getBasePath() {
+            const hostname = window.location.hostname;
+            const pathname = window.location.pathname;
+
+            // GitHub Pages部署
+            if (hostname.includes('github.io')) {
+                // 提取仓库名称作为基础路径
+                // 例如: /username/repo/ -> /username/repo/
+                // 或者: /username/repo/frontend/index.html -> /username/repo/
+                const match = pathname.match(/^\/[^/]+\/[^/]+\//);
+                if (match) {
+                    return match[0];
+                }
+            }
+
+            // 本地开发或自定义域名
+            // 如果当前页面在frontend目录中，需要返回上一级
+            if (pathname.includes('/frontend/')) {
+                return '../';
+            }
+
+            // 根目录部署
+            return './';
+        }
+
+        // 全局基础路径
+        const BASE_PATH = getBasePath();
+
+        console.log('检测到运行环境:', {
+            hostname: window.location.hostname,
+            pathname: window.location.pathname,
+            basePath: BASE_PATH
+        });
+
         // Theme management
         function toggleTheme() {
             const html = document.documentElement;
@@ -1478,18 +1465,20 @@
         function getTypeImagePath(sbitiType, fallback = false) {
             if (!fallback) {
                 // Try exact match first (handles Dior-s.jpg, JOKE-R.jpg, etc.)
-                return `../image/${sbitiType}.jpg`;
+                return `${BASE_PATH}image/${sbitiType}.jpg`;
             } else {
                 // Fallback: try .png or clean the type name
                 const cleanType = sbitiType.replace(/[^a-zA-Z0-9-]/g, '');
-                return `../image/${cleanType}.png`;
+                return `${BASE_PATH}image/${cleanType}.png`;
             }
         }
 
         // Data loading
         async function loadResults() {
             try {
-                const response = await fetch('../data/results.json');
+                const dataUrl = `${BASE_PATH}data/results.json`;
+                console.log('正在加载数据:', dataUrl);
+                const response = await fetch(dataUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }

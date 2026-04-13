@@ -35,5 +35,5 @@ echo "按 Ctrl+C 停止服务器"
 echo "================================"
 echo ""
 
-# 使用Python的HTTP服务器
-python3 -m http.server $PORT
+# 使用自定义HTTP服务器（确保UTF-8编码）
+python3 server.py $PORT
